@@ -25,6 +25,7 @@ If your assembly was unsuccessful, you could already add the log file and the co
 
 ## Installation guide
 
+## How to run
 
 ### 1. Create configuration file
 

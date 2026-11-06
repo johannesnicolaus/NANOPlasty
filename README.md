@@ -107,3 +107,24 @@ Local DB and NP reads = If you ran the dataset before, you can give the path of 
 Min read length PB    = Give the minimum read length to be used in the assembly, (default: 500)
 
 </pre>
+
+**3. Built-in seeds**
+
+When `Seed Input` is left empty, NANOPlasty searches the reads with a built-in seed and, if no read
+matches, moves on to the next seed of the chain for that `Type`:
+
+- `chloro` (also the chloroplast step of `plant_mito`): rbcL from *Zea mays*, *Arabidopsis thaliana* and
+  *Floydiella terrestris*, followed by rbcL from gymnosperms (*Pinus*), ferns (*Adiantum*), mosses
+  (*Physcomitrium*), liverworts (*Marchantia*), charophytes (*Chara*), chlorophytes (*Chlamydomonas*,
+  *Ostreococcus*), euglenids (*Euglena*), glaucophytes (*Cyanophora*), red algae (*Porphyra*), and the
+  red-plastid lineages: cryptophytes (*Guillardia*), diatoms (*Phaeodactylum*), brown algae
+  (*Ectocarpus*) and haptophytes (*Emiliania*).
+- `mito`: COX1 from the isopod *Anilocra*, followed by COX1 from arthropods (insects, *Daphnia*,
+  *Limulus*), molluscs, annelids, flatworms, nematodes, cnidarians, sponges, echinoderms, lancelets,
+  tunicates (*Ciona*, *Oikopleura*) and vertebrates (fish, frog, turtle, chicken, human last), then the
+  mitochondrial SSU rRNA of fungi (*Saccharomyces*, *Fusarium*, *Schizophyllum*; set a larger
+  `Genome Range` for fungi).
+- `plant_mito`: 17 conserved angiosperm mitochondrial genes.
+
+The source accession and coordinates of every seed are written above it in `NANOPlasty0.2.pl`. If your
+organism is far from all of them, give a seed from a close relative with `Seed Input`.

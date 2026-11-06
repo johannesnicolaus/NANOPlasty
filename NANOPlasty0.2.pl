@@ -3670,7 +3670,9 @@ DB_RESULTS_SEED1:
         {
             goto NEXT_SEED;
         }
-        if (($type eq "chloro" || $type eq "mito") && next_builtin_seed_available())
+        # chloro keeps its original test (anything but the last built-in seed retries), so a
+        # user seed that finds nothing behaves exactly as before; mito only moves along its chain.
+        if (($type eq "chloro" && $seed_input ne $chloro_seed_order[-1][1]) || ($type eq "mito" && next_builtin_seed_available()))
         {
             print OUTPUT4 "\nTry next seed!\n";
             $seed_input0 = "";

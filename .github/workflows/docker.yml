@@ -1,0 +1,79 @@
+name: Docker image
+
+# Builds the NANOPlasty image, checks that the tools and Perl modules load,
+# and publishes it to the GitHub Container Registry:
+#   push to main      -> ghcr.io/<owner>/nanoplasty:latest and :sha-<commit>
+#   tag v0.2          -> ghcr.io/<owner>/nanoplasty:0.2
+#   push to a branch  -> ghcr.io/<owner>/nanoplasty:<branch> (for testing before merge)
+#   pull request      -> build and test only
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/nanoplasty
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,enable={{is_default_branch}}
+            type=match,pattern=v(.*),group=1
+            type=ref,event=branch,enable=${{ github.ref_name != github.event.repository.default_branch }}
+
+      - name: Build for testing
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: nanoplasty:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test
+        run: |
+          docker run --rm nanoplasty:test bash -c '
+            set -euo pipefail
+            blastn -version | head -n 1
+            makeblastdb -version | head -n 1
+            kalign --version 2>&1 | head -n 1
+            command -v ps
+            command -v NANOPlasty0.2.pl
+            perl -MMCE -MMCE::Child -MMCE::Channel -MParallel::ForkManager -e "print qq(Perl modules OK\n)"
+            perl -c /opt/nanoplasty/NANOPlasty0.2.pl
+          '
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
